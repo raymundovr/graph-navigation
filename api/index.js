@@ -1,15 +1,17 @@
 const http = require('http');
+const https = require('https');
 const url = require('url');
 
 const fetchContent = url => { return new Promise( function(resolve, reject) {
-    http.get(url, res => {
+	let getter = url.startsWith('https') ? https.get : http.get ;
+    getter(url, res => {
 	    if (res.statusCode === 200) {
-		let content = '';
-		res.on('data', rawData => { content += rawData; });
-		res.on('end', () => resolve(content) );
+			let content = '';
+			res.on('data', rawData => { content += rawData; });
+			res.on('end', () => resolve(content) );
 	    }
 	    else {
-		reject(res.statusCode);
+			reject(res.statusCode);
 	    }
    });
 	});
@@ -33,11 +35,20 @@ const includeLink = link => {
 
 const server = http.createServer((req, res) => {
 	let {query} = url.parse(req.url, true);
-	console.log(req.method);
-	console.log(query);
-	res.writeHead(200, {'Content-Type': 'application/json'});
-	res.end(JSON.stringify({message: 'Hello world!'}));
-}).listen(8080);
+	if (query.u) {		
+		fetchContent(query.u)
+		.then(content => {			
+			let matches = getHyperlinks(content);
+			res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*",
+			"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"});
+			res.end(JSON.stringify({matches: matches}));
+		})
+		.catch(error => console.error(error));
+	} else {
+		res.end(JSON.stringify({query: query}));
+	}
+});
+server.listen(3000);
 
 /* fetchContent('http://ray.lunasexta.org')
     .then(content => {
