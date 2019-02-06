@@ -22,9 +22,9 @@ const getHyperlinks = content => {
     const rexp = /href=(\"|\'){1}(?<link>.+?)(\"|\'){1}/g;
     let links = [];
     while (match = rexp.exec(content)) {
-	let link = match.groups.link;
-	if (includeLink(link))
-	    links.push(link);
+		let link = match.groups.link;
+		if (includeLink(link))
+			links.push(link);
     }
     return links;
 };
@@ -34,18 +34,26 @@ const includeLink = link => {
 }
 
 const server = http.createServer((req, res) => {
-	let {query} = url.parse(req.url, true);
-	if (query.u) {		
-		fetchContent(query.u)
-		.then(content => {			
-			let matches = getHyperlinks(content);
-			res.writeHead(200, {'Content-Type': 'application/json', "Access-Control-Allow-Origin": "*",
-			"Access-Control-Allow-Headers": "Origin, X-Requested-With, Content-Type, Accept"});
-			res.end(JSON.stringify({matches: matches}));
-		})
-		.catch(error => console.error(error));
+	res.setHeader('Content-Type', 'application/json');
+	res.setHeader('Access-Control-Allow-Origin', '*');
+	res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+	console.log(req.method, req.url);
+	if (req.method === 'GET') {	
+		let {query} = url.parse(req.url, true);
+		if (query.u) {		
+			fetchContent(query.u)
+			.then(content => {			
+				let matches = getHyperlinks(content);
+				res.statusCode = 200;				
+				res.end(JSON.stringify({matches: matches}));
+			})
+			.catch(error => console.error(error));
+		} else {
+			res.end(JSON.stringify({'error': 'query does not contain a url'}));
+		}
 	} else {
-		res.end(JSON.stringify({query: query}));
+		res.statusCode = 404;
+		res.end(JSON.stringify({'error': 'not supported'}));
 	}
 });
 server.listen(3000);

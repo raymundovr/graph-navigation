@@ -1,7 +1,8 @@
 <template>
   <form @submit.prevent="$emit('inspect', url)">
-    <label>Search</label>
+    <label>Search: </label>
     <input v-model="url" />
+    <button type="submit">Search...</button>
   </form>
 </template>
 <script>

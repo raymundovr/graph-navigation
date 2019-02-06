@@ -2,7 +2,7 @@
   <div id="app">
     <Search v-on:inspect="inspectLink" />
     <div v-for="(link, index) in links" :key="index">
-      {{ link }}
+      <ResultLink v-bind:name="link" />
     </div>    
   </div>
 </template>
@@ -24,6 +24,7 @@ export default {
   },
   methods: {
     inspectLink: async function(url) {
+      console.log('listening...');
       const queryUrl = `http://localhost:3000?u=${url}`;
       try {
         let response = await fetch(queryUrl);
